@@ -1,7 +1,7 @@
 # 전통시장 AI 숏폼 API (FastAPI)
 
 전통시장 사장님이 **말로 가게를 등록**하고 **사진 몇 장**을 올리면, AI가 **다국어 가게 정보**와
-**20~30초 세로 숏폼(언어별 VTT 자막)**을 만들어 외국인 손님 피드에 올린다. 1차 대상: 서대문구 독립문영천시장·포방터시장.
+**20-30초 세로 숏폼**(언어별 VTT 자막)을 만들어 외국인 손님 피드에 올린다. 1차 대상: 서대문구 독립문영천시장·포방터시장.
 
 - 배포: https://hack.220-66-233-75.nip.io (Swagger `/docs`)
 - API 계약 기준: 노션 **04. 백엔드·API**. 경로·필드를 바꿀 때는 노션도 같이 고친다.
@@ -56,7 +56,7 @@ cp .env.example .env           # 키 없이 두면 mock 모드 (STT·LLM·번역
 - **실시간 생성 영상**: `FEED_DEMO_ONLY=true`(기본)면 피드에 올라가지 않는다. 진행률·`/videos/{id}`·가게 상세에서만 보인다.
 - **K-콘텐츠 카드 이미지**: `demo/contents/<key>.jpg` (`scripts/make_content_cards.py` 로 만든 더미 카드). 포스터·스틸컷은 저작권 때문에 쓰지 않는다. 사용 허가된 이미지가 생기면 같은 파일 이름으로 바꿔 넣고 배포·리셋
 - **임시 영상**: 발표용 영상이 없을 때 `demo/media/` 의 미리 렌더링한 영상 5개가 피드에 나온다. 실제 사진은
-  `demo/photos/<가게 key>/` 에 3~5장 넣고 `.venv/bin/python scripts/make_demo_media.py` → 커밋 → 배포 → 리셋.
+  `demo/photos/<가게 key>/` 에 3-5장 넣고 `.venv/bin/python scripts/make_demo_media.py` → 커밋 → 배포 → 리셋.
 
 ## 환경변수
 
@@ -96,7 +96,7 @@ cp .env.example .env           # 키 없이 두면 mock 모드 (STT·LLM·번역
 | GET | `/merchant/interviews/{id}` | 결과: register `draft`·`needs_check`·`session_id` / story `quotes`·`script_ko` |
 | PATCH | `/merchant/interviews/{id}/draft` | register 결과 고치기 |
 | POST | `/merchant/interviews/{id}/publish` | register → `{store_id}` |
-| POST | `/merchant/stores/{id}/videos` | multipart `photos`(1~5), `interview_id`(선택, 이야기 인터뷰 원음), `script`(선택), `audio`(선택, 스크립트 대신), `menu_id`, `langs` → 202 `{job_id}` |
+| POST | `/merchant/stores/{id}/videos` | multipart `photos`(1-5), `interview_id`(선택, 이야기 인터뷰 원음), `script`(선택), `audio`(선택, 스크립트 대신), `menu_id`, `langs` → 202 `{job_id}` |
 | GET | `/merchant/videos/jobs/{job_id}` | `queued/processing/done/failed`, `progress` |
 | PATCH | `/merchant/stores/{id}`, `/merchant/menus/{id}` | 수정 + 번역 재생성 (P1) |
 | GET | `/contents`, `/contents/{id}/foods` | K-콘텐츠 (P1) |
@@ -112,11 +112,11 @@ cp .env.example .env           # 키 없이 두면 mock 모드 (STT·LLM·번역
 
 - **흐름 (버튼 없이)**: AI 음성 재생 → 끝나면 바로 녹음 → 말이 0.8초 멈추면 `turns` 로 전송하면서 맞장구(`fillers`, "네~")를 바로 재생 → 다음 AI 음성 … `done` 이면 멈춘다.
   말 끝 감지·녹음은 브라우저가 한다 (참고 페이지의 `listen()`). AI 가 말하는 동안에는 녹음하지 않는다(에코 방지).
-- **한 턴**: 음성 인식 1번 + LLM 1번 (실측 1~3초). LLM 은 할 말과 바뀐 항목만 출력한다. `audio_url` 음성은 만드는 대로 스트리밍한다(처음 한 번, 그 뒤엔 저장한 파일).
+- **한 턴**: 음성 인식 1번 + LLM 1번 (실측 1-3초). LLM 은 할 말과 바뀐 항목만 출력한다. `audio_url` 음성은 만드는 대로 스트리밍한다(처음 한 번, 그 뒤엔 저장한 파일).
 - **register**: 가게 이름 → 업종 → 상품·가격(업종별 단위) → 결제 → 영업시간을 묻고, 업종별 질문(원산지, 맵기, 택배 등) 최대 2개 뒤 끝낸다.
   사장님이 말로 고치면 다음 턴에 반영. 끝나면 기존 등록 세션(done)이 생겨 `/onboarding/sessions/{session_id}/summary` 미리보기를 그대로 쓴다.
 - **story**: 시작·세월·손맛·사람·한마디 축으로 꼬리 질문. 같은 축은 두 번까지만 묻는다. 시작 + 2개 축 + 구체적 일화가 나오면 끝낸다.
-  끝나면 AI 가 답에서 **사장님 말 그대로인** 구간 2~5개(20~30초)를 고른다(원문에 없는 문장은 버림). 가게 `story_ko` 도 이 말로 바뀐다.
+  끝나면 AI 가 답에서 **사장님 말 그대로인** 구간 2-5개(20-30초)를 고른다(원문에 없는 문장은 버림). 가게 `story_ko` 도 이 말로 바뀐다.
 - **영상**: `interview_id` 를 주면 고른 구간을 원래 녹음에서 잘라 이어 붙여 목소리로 쓴다(ElevenLabs 음성 맞추기로 구간 시간 찾기, 실패하면 그 답 전체).
 - 종료는 LLM 이 제안하고 서버 규칙(필수 항목, 최대 턴 register 12·story 8, "그만할게요")으로 확정한다.
 - LLM 실패·mock: 고정 질문 + 규칙 기반 정리로 같은 흐름. 음성 인식 실패는 에러 대신 `heard: false` 로 같은 질문을 다시 한다.
@@ -125,7 +125,7 @@ cp .env.example .env           # 키 없이 두면 mock 모드 (STT·LLM·번역
 
 - 자막 원문: 직접 쓴 `script` → 없으면 `audio` 를 STT 로 바꾼 글 → 둘 다 없으면 가게 기본 정보(이름·시장·대표 메뉴·가격·이야기)
 - 사장님 문장은 고치지 않고 줄만 나눈다(줄당 25자 안팎). 6줄을 넘는 긴 스크립트만 AI 가 줄인다
-- 길이 = 자막 줄 수 × 5초, 20~30초. 사진이 적으면 한 장을 확대·이동·축소 구간으로 나눠 보여준다
+- 길이 = 자막 줄 수 × 5초, 20-30초. 사진이 적으면 한 장을 확대·이동·축소 구간으로 나눠 보여준다
 - 소리는 넣지 않는다 (녹음은 자막용으로만 쓴다)
 
 ### AI 실패 시 동작
