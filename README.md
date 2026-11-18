@@ -1,228 +1,274 @@
-# 전통시장 AI 숏폼 API (FastAPI)
+<p align="center">
+  <img src="docs/images/cover.jpg" alt="골목 GOLMOK — 화면 속 그 음식, 서대문 시장에서" width="100%">
+</p>
 
-전통시장 사장님이 **말로 가게를 등록**하고 **사진 몇 장**을 올리면, AI가 **다국어 가게 정보**와
-**20~30초 세로 숏폼(언어별 VTT 자막)**을 만들어 외국인 손님 피드에 올린다. 1차 대상: 서대문구 독립문영천시장·포방터시장.
+<h1 align="center">골목 GOLMOK</h1>
 
-- 배포: https://hack.220-66-233-75.nip.io (Swagger `/docs`)
-- API 계약 기준: 노션 **04. 백엔드·API**. 경로·필드를 바꿀 때는 노션도 같이 고친다.
+<p align="center">
+  <b>사장님의 목소리로, 손님의 언어로</b><br>
+  전통시장 사장님이 <b>말로 가게를 등록</b>하고 <b>사진 몇 장</b>을 올리면,<br>
+  AI가 <b>다국어 가게 정보</b>와 <b>사장님 목소리로 더빙된 세로 숏폼</b>을 만들어 외국인 손님과 연결합니다.
+</p>
 
-## 구조
+<p align="center">
+  <img src="https://img.shields.io/badge/%F0%9F%8F%86%20%EC%B5%9C%EC%9A%B0%EC%88%98%EC%83%81-%EB%AA%85%EC%A7%80%EB%8C%80%ED%95%99%EA%B5%90%202026%20AI%20%EC%B0%BD%EC%9D%98%EC%A0%81%20%EC%95%84%EC%9D%B4%EB%94%94%EC%96%B4%20%ED%95%B4%EC%BB%A4%ED%86%A4-B45750?style=for-the-badge" alt="최우수상">
+</p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/SQLAlchemy%202-D71F00?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy">
+  <img src="https://img.shields.io/badge/OpenAI-412991?logo=openai&logoColor=white" alt="OpenAI">
+  <img src="https://img.shields.io/badge/ElevenLabs-000000?logo=elevenlabs&logoColor=white" alt="ElevenLabs">
+  <img src="https://img.shields.io/badge/ffmpeg-007808?logo=ffmpeg&logoColor=white" alt="ffmpeg">
+  <img src="https://img.shields.io/badge/Python%203-3776AB?logo=python&logoColor=white" alt="Python">
+</p>
+
+> 🏆 **명지대학교 2026학년도 AI 창의적 아이디어 해커톤 경진대회 최우수상** (2026.11, 해커톤 11조)
+>
+> 이 저장소는 골목의 **백엔드(API)** 입니다. 원본: [Gopistol/hackathon-api](https://github.com/Gopistol/hackathon-api)
+
+<br>
+
+## 목차
+
+1. [문제 정의](#문제-정의)
+2. [왜 서대문구인가](#왜-서대문구인가)
+3. [서비스 소개](#서비스-소개)
+4. [실제 화면](#실제-화면)
+5. [AI 파이프라인](#ai-파이프라인)
+6. [내가 맡은 부분](#내가-맡은-부분)
+7. [기대 효과와 확장](#기대-효과와-확장)
+8. [기술 스택 · 실행 방법](#기술-스택)
+9. [팀](#팀)
+
+<br>
+
+## 문제 정의
+
+외국인은 K-드라마와 숏폼에서 본 음식을 먹으러 시장에 오지만 **메뉴를 읽을 수 없고**,
+수십 년 장사한 사장님은 **그 이야기를 외국인에게 전할 방법이 없습니다.**
+
+| 외국인 관광객 | 시장 사장님 |
+| :---: | :---: |
+| <img src="docs/images/problem-tourist.jpg" alt="외국인 관광객의 문제"> | <img src="docs/images/problem-merchant.jpg" alt="상인의 문제"> |
+| 관심 계기 1위 **한류 콘텐츠 38.3%** · 여행 고려 1위 **식도락 61.7%**<br>그런데 언어 소통이 여행 불편 1위 | 상인 평균 **60.2세** · 60대 이상 **57.6%**<br>번역·디자인·영상 제작 모두 부담 |
+| → *내 언어로 된 메뉴, 재료·식이 정보, 한 장으로 끝나는 주문* | → *쉬운 다국어 홍보, 가격 투명 공개, 1분 등록* |
+
+<sub>출처: 한국관광공사 외래관광객조사(2024·2025), 음식관광 실태조사(2019), 소상공인시장진흥공단 전통시장 점포경영 실태조사(2022)</sub>
+
+<br>
+
+## 왜 서대문구인가
+
+<p align="center">
+  <img src="docs/images/why-seodaemun.jpg" alt="왜 서대문구인가" width="90%">
+</p>
+
+서울 열린데이터광장 생활인구 데이터를 직접 분석했습니다.
+
+- 학기 중 평일 낮 **장기체류 외국인 생활인구 18,629명** — 서울 25개 구 중 2위
+- 낮 시간 **20~24세 비중 9.6%** — 서울 평균(5.4%)의 약 1.8배, 서울 2위
+- **영천시장 · 포방터시장** 2026 문화관광형시장 동시 선정 → 1차 대상
+
+<br>
+
+## 서비스 소개
+
+<p align="center">
+  <img src="docs/images/service.jpg" alt="서비스 소개" width="90%">
+</p>
+
+| 누가 | 무엇을 | 결과 |
+| --- | --- | --- |
+| **사장님** | 전화 받듯 AI와 대화하며 가게 등록 + 가게 사진 1~5장 | 버튼 없이, 말만으로 등록 |
+| **골목 AI** | 대화 내용 정리 · 번역 · 숏폼 렌더링 | 다국어 가게 정보 + 사장님 목소리 더빙 쇼츠 |
+| **손님** | 피드에서 쇼츠 시청 → 가게 상세 → 주문 카드 | 한국어 주문 카드를 사장님께 보여주면 주문 끝 |
+
+지원 언어: **English · 中文 · 한국어**
+
+<br>
+
+## 실제 화면
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/screen-merchant.png" width="200" alt="사장님 등록"></td>
+    <td align="center"><img src="docs/images/screen-feed.png" width="200" alt="숏폼 피드"></td>
+    <td align="center"><img src="docs/images/screen-kcontent.png" width="200" alt="K-콘텐츠"></td>
+    <td align="center"><img src="docs/images/screen-order.png" width="200" alt="주문 카드"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>사장님</b><br>말로 가게 등록</td>
+    <td align="center"><b>피드</b><br>사장님 이야기 쇼츠</td>
+    <td align="center"><b>K-콘텐츠</b><br>드라마 속 음식 찾기</td>
+    <td align="center"><b>주문 카드</b><br>한국어로 주문</td>
+  </tr>
+</table>
+
+### AI가 만든 숏폼 (발표 시연용)
+
+사진과 사장님 이야기로 만든 20~30초 세로 영상입니다. 언어마다 자막을 굽고, 사장님 목소리를 복제해 더빙합니다.
+
+<p align="center">
+  <img src="docs/images/short-hongeun-bindaetteok.gif" width="220" alt="빈대떡 가게 숏폼">
+  &nbsp;
+  <img src="docs/images/short-yeongcheon-donut.gif" width="220" alt="꽈배기 가게 숏폼">
+  &nbsp;
+  <img src="docs/images/short-yeongcheon-oil.gif" width="220" alt="떡볶이 가게 숏폼">
+</p>
+
+<br>
+
+## AI 파이프라인
+
+```mermaid
+flowchart LR
+    subgraph M["사장님"]
+        V["🎙️ 음성 답변"]
+        P["📷 사진 1~5장"]
+    end
+
+    subgraph I["통화형 AI 인터뷰"]
+        STT["STT<br>gpt-4o-mini-transcribe"]
+        LLM["LLM<br>맞장구 + 다음 질문<br>+ 바뀐 항목만 출력"]
+        TTS["TTS 스트리밍<br>ElevenLabs → OpenAI"]
+    end
+
+    subgraph N["정리 · 번역"]
+        D["가게 정보 draft<br>needs_check 표시"]
+        Q["이야기 구간 추출<br>원문 그대로만"]
+        T["다국어 번역<br>+ 음식 용어집"]
+    end
+
+    subgraph F["숏폼 렌더링 (ffmpeg)"]
+        R["카메라 무빙 · 장면 전환<br>시작/끝 정보 카드"]
+        S["언어별 자막 굽기 + VTT"]
+        A["사장님 원음 / 목소리 복제 더빙"]
+    end
+
+    V --> STT --> LLM --> TTS -->|다음 질문| V
+    LLM --> D --> T
+    LLM --> Q
+    P --> R
+    Q --> A
+    T --> S
+    R & S & A --> OUT["🎬 언어별 720×1280 MP4"]
+    OUT --> FEED["외국인 손님 피드"]
 ```
-app/
-├── main.py              # 앱, CORS, 에러 핸들러, /api/v1 라우터, /media 정적 파일, 시작 시 시드
-├── core/config.py       # 환경변수 (Settings)
-├── core/errors.py       # 공통 에러 형식 {"error": {"code", "message"}}
-├── api/v1/customer.py   # 시장·핀, 피드, 가게 상세, 주문 화면, 영상, K-콘텐츠
-├── api/v1/merchant.py   # 음성 등록 세션, 영상 생성 job, 가게·메뉴 수정
-├── api/v1/admin.py      # 데모 리셋
-├── services/ai.py       # STT·단계별 정리·번역·자막 (mock/실패 시 대체 동작 포함)
-├── services/onboarding.py, interview.py (통화형 AI 인터뷰), video.py (ffmpeg), maps.py (Google), i18n.py (언어·음식 용어집), views.py
-├── models/, schemas/
-├── seed.py, seed_data.py  # 멱등 시드·리셋, 시연용 가게 5개·K-콘텐츠 3개
-├── prompts.py           # LLM 프롬프트
-└── llm/                 # LLM 프로바이더 (openai 기본, anthropic, mock)
-demo/                    # 미리 렌더링한 영상(media/), 원본 사진(photos/), markets.csv(있으면)
-scripts/make_demo_media.py  # demo/photos 로 미리 렌더링 영상 다시 만들기
-```
 
-## 로컬 실행
+**라이브 데모가 끊기지 않게** 모든 외부 호출에 대체 동작을 두었습니다.
+
+| 단계 | 실패 시 |
+| --- | --- |
+| 음성 인식 | 에러 대신 `heard: false`로 같은 질문을 다시, 반복 실패 시 말하기 팁 안내 |
+| LLM 정리 | JSON 재시도 → 고정 질문 + 규칙 기반 정리로 같은 흐름 유지 |
+| 번역 | 음식 용어집 → 한국어 원문 |
+| 더빙 | 목소리 복제(ElevenLabs) → AI 기본 목소리(OpenAI) → 사장님 원음 → 무음 |
+| 렌더링 | job `failed` 처리, 미리 렌더링한 시연 영상은 피드에 유지 |
+
+<br>
+
+## 내가 맡은 부분
+
+**전예준** — 서비스 기획 · AI 인터뷰 / 숏폼 파이프라인 개발
+
+#### 1. 통화형 AI 인터뷰 (`app/services/interview.py`)
+- 60대 사장님도 쓸 수 있도록 **버튼 없이 전화처럼 이어지는 대화** 설계 — AI 음성 재생 → 자동 녹음 → 말이 멈추면 전송
+- 한 턴 = STT 1번 + LLM 1번 (실측 **1~3초**). LLM은 할 말과 바뀐 항목만 출력하게 해 응답을 줄이고, 맞장구("네~")는 즉시 재생, TTS는 생성하는 대로 스트리밍
+- **register** 모드: 업종에 맞춰 이름 → 상품·가격 → 결제 → 영업시간 → 업종별 질문(원산지, 맵기, 택배 등)을 묻고, 사장님이 말로 고치면 다음 턴에 반영
+- **story** 모드: 시작 · 세월 · 손맛 · 사람 · 한마디 축으로 꼬리 질문을 이어 사장님 인생 이야기를 끌어냄
+- 어르신·시장 소음 환경 대응: STT 시간 제한, 반복 인식 실패 시 말하기 팁, 네트워크·마이크 오류에도 끊기지 않는 데모 페이지
+
+#### 2. 사장님 목소리 숏폼 (`app/services/video.py`)
+- 생성형 영상 모델 대신 **실제 가게 사진 + ffmpeg 템플릿 합성** — 실제 음식과 다르게 보일 위험을 없애고, 1장만으로도 확대·이동·축소 구간을 나눠 20~30초 구성
+- 언어별 자막을 영상에 굽고 플레이어용 VTT도 함께 생성, 시작에 가게 이름 · 끝에 메뉴·가격·결제 카드
+- 한국어 영상은 **사장님 원래 목소리**, 외국어 영상은 **사장님 목소리를 복제해 더빙**
+- 이야기 인터뷰에서 **사장님이 실제로 한 말만** 2~5개 구간으로 골라(원문에 없는 문장은 버려 환각 차단) 음성 정렬로 원 녹음에서 잘라 이어 붙임
+
+<br>
+
+## 기대 효과와 확장
+
+<p align="center">
+  <img src="docs/images/impact.jpg" alt="기대 효과" width="90%">
+</p>
+
+| 대상 | 효과 | 지표 |
+| --- | --- | --- |
+| 외국인 관광객 | 화면 속 음식을 시장에서 직접 맛보고, 가게의 이야기까지 경험 | 콘텐츠 시청 → 저장·길찾기 전환율 |
+| 시장 사장님 | 사진과 30초 음성만으로 다국어 메뉴·홍보 영상 확보 | 언어별 영상 조회 수, 주문 수 |
+| 서대문구·상인회 | 나라별 손님 수요 데이터로 시장 지원 정책 근거 확보 | 나라별 방문 수, 인기 메뉴 순위 |
+
+<p align="center">
+  <img src="docs/images/vision.jpg" alt="비전 확장" width="90%">
+</p>
+
+**영천·포방터시장 → 서대문구 전체(11곳) → 서울, 그리고 전국.**
+언어도 서대문 장기체류 외국인 국적 순으로 日本語 · Tiếng Việt · Français까지 확장합니다.
+
+<br>
+
+## 기술 스택
+
+| 영역 | 사용 기술 |
+| --- | --- |
+| API 서버 | FastAPI, Pydantic Settings, Uvicorn |
+| DB | SQLite + SQLAlchemy 2.x |
+| LLM | OpenAI `gpt-4.1-mini` (프로바이더 교체 가능: `openai` / `anthropic` / `mock`) |
+| 음성 인식 | OpenAI `gpt-4o-mini-transcribe` |
+| 음성 합성·더빙 | ElevenLabs (TTS, 목소리 복제, 음성 정렬), OpenAI `gpt-4o-mini-tts` |
+| 영상 | ffmpeg (imageio-ffmpeg), Pillow |
+| 배포 | VM + systemd + Caddy (메모리 600MB, 워커 1개) |
+
+### 실행 방법
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
-cp .env.example .env           # 키 없이 두면 mock 모드 (STT·LLM·번역 전부 고정 응답)
-.venv/bin/uvicorn app.main:app --reload    # http://127.0.0.1:8000/docs
+cp .env.example .env                        # 키 없이 두면 mock 모드로 전체 흐름 동작
+.venv/bin/uvicorn app.main:app --reload     # http://127.0.0.1:8000/docs
+.venv/bin/pytest                            # 네트워크·키 없이 테스트
 ```
 
-처음 시작할 때 DB가 비어 있으면 자동으로 시드한다. ffmpeg 는 PATH 에 없으면 `imageio-ffmpeg` 내장 바이너리를 쓴다.
+API 명세, 환경변수, 시드·리셋, 서버 배포 방법은 **[개발 문서](docs/DEVELOPMENT.md)** 에 정리되어 있습니다.
 
-## 시드와 리셋
+### 프로젝트 구조
 
-| 방법 | 명령 |
-|---|---|
-| 비어 있을 때만 시드 | 앱 시작 시 자동, 또는 `.venv/bin/python -m app.seed` |
-| 처음 상태로 되돌리기 (로컬) | `.venv/bin/python -m app.seed --reset` (서버 재시작 필요 없음) |
-| 처음 상태로 되돌리기 (서버, 리허설용) | `curl -X POST https://hack.220-66-233-75.nip.io/api/v1/admin/reset -H "X-Admin-Token: $ADMIN_TOKEN"` |
-
-리셋은 DB 테이블, 생성된 영상·자막, 사장님 음성을 지우고 시드를 다시 넣는다.
-
-- **시장**: `demo/markets.csv`(전국전통시장표준데이터 CSV, [data.go.kr](https://www.data.go.kr/data/15012894/standard.do))가 있으면 서대문구만 넣는다. 없으면 영천·포방터 2곳을 대략 좌표로 넣는다.
-- **발표용 영상 (우선)**: `demo/showcase/<가게 key>.mp4` 를 넣으면 임시 영상 대신 **이 영상만** 피드에 나온다.
-  - 가게 key: `yeongcheon-oil`, `yeongcheon-donut`, `dongnimmun-bunsik`, `pobangteo-tteokbokki`, `hongeun-bindaetteok` (`app/seed_data.py`)
-  - 선택: `<key>.jpg` 썸네일(없으면 1초 지점에서 자동 추출), `<key>.ko.vtt`·`<key>.en.vtt`·`<key>.zh.vtt` 자막(없으면 자막 없음, 자막을 영상에 구웠다면 안 넣어도 됨)
-  - 피드 순서는 위 key 순서. 파일당 100MB 미만(GitHub 제한), 무대 재생을 생각하면 20MB 이하 권장
-  - 넣은 뒤: 커밋 → `bash deploy/deploy.sh` → 리셋
-- **실시간 생성 영상**: `FEED_DEMO_ONLY=true`(기본)면 피드에 올라가지 않는다. 진행률·`/videos/{id}`·가게 상세에서만 보인다.
-- **K-콘텐츠 카드 이미지**: `demo/contents/<key>.jpg` (`scripts/make_content_cards.py` 로 만든 더미 카드). 포스터·스틸컷은 저작권 때문에 쓰지 않는다. 사용 허가된 이미지가 생기면 같은 파일 이름으로 바꿔 넣고 배포·리셋
-- **임시 영상**: 발표용 영상이 없을 때 `demo/media/` 의 미리 렌더링한 영상 5개가 피드에 나온다. 실제 사진은
-  `demo/photos/<가게 key>/` 에 3~5장 넣고 `.venv/bin/python scripts/make_demo_media.py` → 커밋 → 배포 → 리셋.
-
-## 환경변수
-
-| 이름 | 기본값 | 설명 |
-|---|---|---|
-| `LLM_PROVIDER` | `openai` | `openai` / `anthropic` / `mock`. 키가 비어 있으면 mock |
-| `OPENAI_API_KEY` | | STT·정리·번역·자막 전부 이 키 하나 |
-| `OPENAI_MODEL` | `gpt-4.1-mini` | |
-| `OPENAI_STT_MODEL` | `gpt-4o-mini-transcribe` | |
-| `OPENAI_MAX_OUTPUT_TOKENS` / `OPENAI_TIMEOUT` / `OPENAI_MAX_RETRIES` | `2048` / `15` / `0` | 데모용으로 짧게. 실패 시 단계별 대체 동작 |
-| `CORS_ORIGINS` | localhost:3000,5173 | 프론트 주소 (콤마 구분) |
-| `CORS_ORIGIN_REGEX` | | 프론트 주소 정규식. 서버: `^https://[a-z0-9-]+\.(vercel\.app\|netlify\.app)$` |
-| `DATABASE_URL` | `sqlite:///./data/app.db` | 서버: `sqlite:////opt/hackathon/data/app.db` |
-| `MEDIA_DIR` / `AUDIO_DIR` | `./data/media` / `./data/audio` | 서버: `/opt/hackathon/data/media`, `/opt/hackathon/data/audio` (**절대경로 필수**. 상대경로면 배포 때 지워짐) |
-| `ADMIN_TOKEN` | | 리셋 엔드포인트 토큰. 비우면 리셋 꺼짐 |
-| `GOOGLE_MAPS_API_KEY` | | (선택) 서버 IP 로 제한한 Geocoding 키. 비우면 가게 좌표 = 시장 좌표 근처 |
-| `FEED_DEMO_ONLY` | `true` | 피드에 시연 영상만. 실시간 생성 영상은 피드 제외 |
-| `FFMPEG_PATH` | | 비우면 PATH → imageio-ffmpeg |
-
-## API 요약 (`/api/v1`, 언어 `lang=ko|en|zh`, 기본 en)
-
-| 메서드 | 경로 | |
-|---|---|---|
-| GET | `/markets`, `/markets/{id}/stores` | 시장 목록, 지도 핀 (`directions_url` = Google Maps 길찾기) |
-| GET | `/feed?cursor=` | 숏폼 피드 (10개씩, `next_cursor`) |
-| GET | `/stores/{id}` | 가게 상세 (다국어 메뉴·먹는 법·맵기) |
-| POST | `/orders/preview` | 주문 화면 (한국어 문장) |
-| GET | `/videos/{id}` | 영상 상세 |
-| POST | `/merchant/onboarding/sessions` | 등록 세션 시작 → 첫 질문 |
-| POST | `/merchant/onboarding/sessions/{id}/answers` | multipart `audio` 또는 `text` |
-| POST | `/merchant/onboarding/sessions/{id}/confirm` | `{step, accepted, edits?}` |
-| GET | `/merchant/onboarding/sessions/{id}/summary` | 단계별 값, `needs_check`, `preview_en` |
-| POST | `/merchant/onboarding/sessions/{id}/publish` | 저장 + 번역 → `{store_id}` |
-| POST | `/merchant/interviews` | 통화형 AI 인터뷰 시작 `{kind: register\|story, store_id?, market_id?}` → 첫 질문 `say_ko`, `audio_url` |
-| POST | `/merchant/interviews/{id}/turns` | multipart `audio` 또는 `text`, `turn` → 맞장구+다음 질문, `done`, `progress`, `draft`(register) |
-| POST | `/merchant/interviews/{id}/finish` | 그만하기 |
-| GET | `/merchant/interviews/{id}` | 결과: register `draft`·`needs_check`·`session_id` / story `quotes`·`script_ko` |
-| PATCH | `/merchant/interviews/{id}/draft` | register 결과 고치기 |
-| POST | `/merchant/interviews/{id}/publish` | register → `{store_id}` |
-| POST | `/merchant/stores/{id}/videos` | multipart `photos`(1~5), `interview_id`(선택, 이야기 인터뷰 원음), `script`(선택), `audio`(선택, 스크립트 대신), `menu_id`, `langs` → 202 `{job_id}` |
-| GET | `/merchant/videos/jobs/{job_id}` | `queued/processing/done/failed`, `progress` |
-| PATCH | `/merchant/stores/{id}`, `/merchant/menus/{id}` | 수정 + 번역 재생성 (P1) |
-| GET | `/contents`, `/contents/{id}/foods` | K-콘텐츠 (P1) |
-| POST | `/admin/reset` | 데모 리셋 (`X-Admin-Token`) |
-
-- 미디어 URL(`/media/...`)은 상대경로다. 프론트에서 API 주소를 앞에 붙인다.
-- 에러: `{"error": {"code": "STT_FAILED", "message": "..."}}`. 코드: `VALIDATION_ERROR`, `NOT_FOUND`, `STT_FAILED`,
-  `LLM_FAILED`, `UPLOAD_TOO_LARGE`, `INVALID_IMAGE`, `STEP_MISMATCH`, `NO_ANSWER`, `ONBOARDING_INCOMPLETE`, `ONBOARDING_DONE`, `FORBIDDEN`, `INTERNAL_ERROR`
-
-### 통화형 AI 인터뷰
-
-기존 등록(고정 질문 5개 + 맞아요/다시)은 그대로 두고 추가한 기능이다. 참고용 웹 페이지: `/demo/interview.html`
-
-- **흐름 (버튼 없이)**: AI 음성 재생 → 끝나면 바로 녹음 → 말이 0.8초 멈추면 `turns` 로 전송하면서 맞장구(`fillers`, "네~")를 바로 재생 → 다음 AI 음성 … `done` 이면 멈춘다.
-  말 끝 감지·녹음은 브라우저가 한다 (참고 페이지의 `listen()`). AI 가 말하는 동안에는 녹음하지 않는다(에코 방지).
-- **한 턴**: 음성 인식 1번 + LLM 1번 (실측 1~3초). LLM 은 할 말과 바뀐 항목만 출력한다. `audio_url` 음성은 만드는 대로 스트리밍한다(처음 한 번, 그 뒤엔 저장한 파일).
-- **register**: 가게 이름 → 업종 → 상품·가격(업종별 단위) → 결제 → 영업시간을 묻고, 업종별 질문(원산지, 맵기, 택배 등) 최대 2개 뒤 끝낸다.
-  사장님이 말로 고치면 다음 턴에 반영. 끝나면 기존 등록 세션(done)이 생겨 `/onboarding/sessions/{session_id}/summary` 미리보기를 그대로 쓴다.
-- **story**: 시작·세월·손맛·사람·한마디 축으로 꼬리 질문. 같은 축은 두 번까지만 묻는다. 시작 + 2개 축 + 구체적 일화가 나오면 끝낸다.
-  끝나면 AI 가 답에서 **사장님 말 그대로인** 구간 2~5개(20~30초)를 고른다(원문에 없는 문장은 버림). 가게 `story_ko` 도 이 말로 바뀐다.
-- **영상**: `interview_id` 를 주면 고른 구간을 원래 녹음에서 잘라 이어 붙여 목소리로 쓴다(ElevenLabs 음성 맞추기로 구간 시간 찾기, 실패하면 그 답 전체).
-- 종료는 LLM 이 제안하고 서버 규칙(필수 항목, 최대 턴 register 12·story 8, "그만할게요")으로 확정한다.
-- LLM 실패·mock: 고정 질문 + 규칙 기반 정리로 같은 흐름. 음성 인식 실패는 에러 대신 `heard: false` 로 같은 질문을 다시 한다.
-
-### 영상 생성 규칙
-
-- 자막 원문: 직접 쓴 `script` → 없으면 `audio` 를 STT 로 바꾼 글 → 둘 다 없으면 가게 기본 정보(이름·시장·대표 메뉴·가격·이야기)
-- 사장님 문장은 고치지 않고 줄만 나눈다(줄당 25자 안팎). 6줄을 넘는 긴 스크립트만 AI 가 줄인다
-- 길이 = 자막 줄 수 × 5초, 20~30초. 사진이 적으면 한 장을 확대·이동·축소 구간으로 나눠 보여준다
-- 소리는 넣지 않는다 (녹음은 자막용으로만 쓴다)
-
-### AI 실패 시 동작
-
-| 단계 | 실패 시 |
-|---|---|
-| STT | `STT_FAILED` → 다시 말하기 또는 `text` 로 입력 |
-| 단계별 정리 | JSON 파싱 1회 재시도 → 규칙 기반 정리 + `needs_check` 에 확인 요청 |
-| 번역 | 음식 용어집 → 없으면 한국어 원문 |
-| 영상 자막 | 사장님 스크립트 → 번역 실패 시 한국어 원문 / 스크립트 없으면 가게 정보로 만든 템플릿 문장 |
-| 영상 렌더링 | job `failed`. 미리 렌더링한 영상은 피드에 남아 있다 |
-
-API 키는 코드·커밋·응답·로그에 넣지 않는다. 프로바이더 원본 에러 메시지는 사용자에게 돌려주지 않는다.
-
-## 테스트
-
-```bash
-.venv/bin/pytest               # 네트워크·키 없이 (mock 모드, 실제 ffmpeg 렌더링 포함)
-.venv/bin/pytest -m live       # 실제 OpenAI 호출 (비용 발생)
+```text
+app/
+├── api/v1/          # customer(피드·가게·주문) / merchant(등록·인터뷰·영상) / admin(리셋)
+├── services/
+│   ├── interview.py # 통화형 AI 인터뷰 (register · story)
+│   ├── video.py     # 숏폼 렌더링 · 더빙 · 이야기 구간 이어 붙이기
+│   ├── ai.py        # STT · 정리 · 번역 · 자막 (mock · 실패 대체 포함)
+│   ├── elevenlabs.py, tts.py, subtitles.py, i18n.py, maps.py, onboarding.py
+├── llm/             # LLM 프로바이더 (openai · anthropic · mock)
+├── prompts.py       # 시스템 프롬프트
+└── seed_data.py     # 시연용 시장 · 가게 · K-콘텐츠
+demo/                # 시연 영상 · 사진 · K-콘텐츠 카드
+docs/                # 개발 문서 · README 이미지
 ```
 
-## 서버 배포 (BlueRack VM)
+<br>
 
-배포 완료 (2026-11-03): **https://hack.220-66-233-75.nip.io** (`/health`, `/docs`)
+## 팀
 
-| 항목 | 위치 |
-|---|---|
-| 코드 | `/opt/hackathon/app` (실행 계정 `hackathon`) |
-| 가상환경 | `/opt/hackathon/venv` |
-| SQLite DB | `/opt/hackathon/data/app.db` (배포해도 유지됨, 자동 백업 없음) |
-| 미디어·음성 | `/opt/hackathon/data/media` (`/media` 로 공개), `/opt/hackathon/data/audio` (비공개) |
-| 환경변수 | `/etc/hackathon/hackathon.env` (root:hackathon 640) |
-| 서비스 | `systemctl status hackathon`, 로그 `sudo journalctl -u hackathon -f` |
-| Caddy | `/etc/caddy/Caddyfile` 끝의 `hack.` 블록, 접근 로그 `/var/log/caddy/hackathon.log` |
+**명지대학교 2026 AI 창의적 아이디어 해커톤 11조**
 
-### SSH 접속 준비 (한 번만)
+| 이름 | 역할 |
+| --- | --- |
+| 전예준 | 기획 · AI 인터뷰 / 숏폼 파이프라인 |
+| [고건](https://github.com/Gopistol) | 백엔드 |
+| 김경태 | 백엔드 |
+| 최수현 | 프론트엔드 |
+| 서주연 | 프론트엔드 |
+| 김수은 | 디자인 |
 
-`~/.ssh/config` 에 추가하고 개인키를 `~/.ssh/` 에 둔다 (권한 600).
+<br>
 
-```
-Host bluerack
-    HostName access2.bluerack.org
-    Port 31004
-    User ubuntu
-    IdentityFile ~/.ssh/<개인키 파일>
-    IdentitiesOnly yes
-```
+<p align="center">
+  <b>모든 골목에, 새로운 맛</b><br>
+  <i>Every alley, a new flavor.</i>
+</p>
 
-### 코드 갱신
-
-커밋한 뒤 로컬에서:
-
-```bash
-bash deploy/deploy.sh
-```
-
-커밋된 HEAD 를 서버로 보내 설치·재시작하고 health check 까지 한다. 실패하면 기존 코드가 남는다.
-(레포가 비공개이고 서버에 Deploy key 를 등록하지 않았으므로 서버에서 `git pull` 하지 않는다.)
-
-### 환경변수 변경 (API 키, CORS 등)
-
-```bash
-ssh bluerack
-sudo nano /etc/hackathon/hackathon.env
-sudo systemctl restart hackathon
-```
-
-### 주의
-
-- 이 VM 은 다른 서비스와 공유한다. 다른 서비스가 쓰는 포트·Caddy 블록·DB·버킷·설정 파일은 건드리지 않는다.
-- 서버 RAM 은 3.3GiB 를 공유한다. 워커 1개, `MemoryMax=600M`.
-- Caddy 를 고칠 때 `sudo caddy validate` 가 새 로그 파일을 root 소유로 만들면 reload 가 실패한다.
-  그때는 `sudo chown caddy:caddy /var/log/caddy/<파일>` 후 다시 `sudo systemctl reload caddy`.
-- Caddy 는 `restart` 가 아니라 `reload` (같은 VM 의 다른 사이트가 끊기지 않음).
-
-### 되돌리기
-
-```bash
-sudo systemctl disable --now hackathon
-sudo cp /etc/caddy/Caddyfile.bak /etc/caddy/Caddyfile && sudo systemctl reload caddy
-systemctl is-active caddy                              # Caddy 정상 확인
-```
-
-## 제출 전 체크리스트 (공식 가이드 기준)
-
-- [ ] `pytest` 통과, `/health` 가 `{"status":"ok"}`
-- [ ] 리허설 후 `POST /api/v1/admin/reset` 으로 데모 데이터 초기화
-- [ ] `.env` 가 `git status` 에 안 보이고, 커밋 기록에도 키가 없음
-- [ ] `demo/` 에 백업 스크린샷 또는 90초 녹화
-- [ ] 아래 팀 섹션 작성: 문제·사용자·AI 흐름·데모 흐름, 리스크 5줄, 비용 메모
-- [ ] 발표 화면에 키·`.env`·OpenAI 대시보드 탭이 보이지 않음
-- [ ] 발표 10분 전: 반복 호출 스크립트 종료, 시연 URL 한 번 호출해 확인
-
-## 팀 프로젝트 (해커톤 당일 작성)
-
-- **문제 / 사용자**:
-- **AI 흐름 (OpenAI 사용)**:
-- **데모 흐름**:
-- **리스크**: 프롬프트 인젝션 / 환각 / 개인정보 / 비용 / 대응 담당
-- **비용 메모**: 사용한 모델(`OPENAI_MODEL`)과 대략적인 토큰 사용량
+<p align="center"><sub>발표 자료 속 일부 사진은 AI로 생성한 이미지입니다.</sub></p>
